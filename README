@@ -1,15 +1,18 @@
 
-## LastFetch v.0.0.9
+LastFetch v.0.1.0   
+
+Fetch annual monthly and total stats of a specific user from last.fm
 
 
-# AUTHOR: sugardrunk
-          http://sugardrunk.devio.us
-
-# ORIGIN: forked from "lastyear" by Andy Theyer
-          https://github.com/offmessage/lastyear
+    Copyright (C) 2011 sugardrunk <http://sugardrunk.devio.us>  
+    Forked from 'lastyear' by Andy Theyer <https://github.com/offmessage/lastyear>
 
 
-## Quick and dirty script to get month by month and total of the year plays from the last.fm API
+HOW TO RUN:
+    
+    Run 'python lastfetch.py <username>'
 
- # DEPENDENCIES: httplib2
- # HOW TO RUN: "python fetcher.py <yourusername>"
+DEPENDENCIES:
+
+    httplib2
+
