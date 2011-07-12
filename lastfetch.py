@@ -4,7 +4,7 @@
 
 ## LastFetch v.0.1.0
 
-##  Fetch annual monthly and total stats of a specific user from last.fm
+##  Fetch monthly and annual total stats of a specific user from last.fm
 ##  Copyright (C) 2011 Sugardrunk <http://sugardrunk.devio.us>
 
 ##  Forked from 'lastyear' by Andy Theyer <https://github.com/offmessage/lastyear>
@@ -15,15 +15,15 @@ from xml.etree import ElementTree
 
 BASEURL = 'http://ws.audioscrobbler.com/2.0/user/%s/recenttracks.xml?limit=200&%s'
 
-# print title
+# first section
 title1 = 'LastFetch v.0.1.0'
-print '\n'
-print title1
-print '='*len(title1), '\n'
+print '\n\n',title1
+print '='*len(title1)
 fetch_year = raw_input('YEAR TO FETCH: ')
-print '\nPlease be patient as each month may take a lot of time to retrieve...'
-print '\n'
+play_count = input('MINIMUM PLAY COUNT: ')
+print '\nplease wait a little...''\n\n'
 
+# set class
 class LastFetch1(object):
     def __init__(main, user, start=None, end=None):        
         main.user = user
@@ -44,15 +44,13 @@ class LastFetch1(object):
         g = itertools.groupby(main.data, grouper1)
         main.results = [ (len(list(v)), k) for k, v in g ]
         main.results.sort()
-        main.results.reverse()     
-        
+        main.results.reverse()
     def show(main, limit=None, morethan=None):
         if limit:
             return main.results[:limit]
         if morethan:
             return [ r for r in main.results if r[0] > morethan ]
-        return main.results
-    
+        return main.results    
     def get(main):
         data = {'page': main.page,}
         if main.start:
@@ -63,8 +61,7 @@ class LastFetch1(object):
         url = BASEURL % (main.user, qs)
         h = httplib2.Http()
         resp, content = h.request(url)
-        return content
-       
+        return content       
     def _process(main, xml):
         t = ElementTree.fromstring(xml)
         def processtrack(track):
@@ -73,8 +70,7 @@ class LastFetch1(object):
                 track.find('album').text,
                 track.find('name').text,
                 )
-        return [ processtrack(tr) for tr in t.findall('track') ]
-    
+        return [ processtrack(tr) for tr in t.findall('track') ]    
     def _getpages(main, xml):
         t = ElementTree.fromstring(xml)
         return int(t.get('totalPages', 1))              
@@ -82,8 +78,8 @@ class LastFetch1(object):
 if __name__ == '__main__':
 
     from datetime import datetime
-    import time, sys
-
+    import time, sys   
+    
     months1 = [
         ('January', fetch_year + '-01-01', fetch_year + '-01-31',),
         ('February', fetch_year + '-02-01', fetch_year + '-02-28',),
@@ -97,53 +93,35 @@ if __name__ == '__main__':
         ('October', fetch_year + '-10-01', fetch_year + '-10-31',),
         ('November', fetch_year + '-11-01', fetch_year + '-11-30',),
         ('December', fetch_year + '-12-01', fetch_year + '-12-31',),        
-        ('Annual Total:', fetch_year + '-01-01', fetch_year + '-12-31',),
-        ]
+        ('Annual Total', fetch_year + '-01-01', fetch_year + '-12-31',),
+        ]  
 
     format1 = '%Y-%m-%d'
     user = sys.argv[1]
 
-    for month in months1:
-        
+    for month in months1:        
         print month[0]
         print '='*len(month[0])
         start = int(time.mktime(time.strptime(month[1], format1)))
         end = int(time.mktime(time.strptime(month[2], format1)))
-        months2 = LastFetch1(user, start, end)
-        
-        # play count limit & print stats
-        countLimit1 = 20
+        months2 = LastFetch1(user, start, end)       
+        countLimit1 = play_count
         data = months2.show(morethan = countLimit1)
         totplays = 0
         for row in data:
             totplays += row[0]
         totartists = len(data)
         print 'Total artists =', totartists
-        print 'Total tracks =', totplays
-        print
+        print 'Total tracks =', totplays,'\n'        
         for row in data:
-            print row[0],"=",row[1].encode('utf-8')
-
-        raw_input('\n\nPRESS ENTER TO CONTINUE...''\n')
-
-        # write output to file        
-        ##br1 = '</br></br></br>'
-        ##br2 = '</br></br>'
-        ##write1 = month[0]
-        ##write2 = 
-        ##file1 = open('output.html','a')
-        ##file1.write (br1)
-        ##file1.write(write1)
-        ##file1.write (br2)
-        ##file1.write(write2)
-        ##file1.close()
-
-# the end 
+            print row[0],'=',row[1].encode('utf-8')
+            
+        raw_input('\npress enter to continue...''\n\n')       
+        
 try:
     print 'ANNUAL AVERAGE TRACKS PER ARTIST =', totplays / totartists
 except (ZeroDivisionError):
     print '0'
     pass
 
-raw_input('\n\nPRESS ENTER TO EXIT...')
-print '\n'
+raw_input('\npress enter to exit...''\n\n')
