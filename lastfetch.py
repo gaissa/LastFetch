@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 
-## LastFetch v.0.1.1
+## LastFetch v.0.1.2
 
 ##  Fetch monthly and annual total stats of a specific user from last.fm
-##  Copyright (C) 2011-2012 Sugardrunk <http://koti.tamk.fi/~c1jkahko/>
+##  Copyright (C) 2011-2014 Sugardrunk <http://koti.tamk.fi/~c1jkahko/>
 
 ##  Forked from 'lastyear'
 ##  by Andy Theyer <https://github.com/offmessage/lastyear>
@@ -18,28 +18,29 @@ import sys
 import time
 import urllib
 
+# debug output <True/False>
+debug = False;
+
 # url setup
 scrobbler = 'http://ws.audioscrobbler.com/2.0/user' + \
-          '/%s/recenttracks.xml?limit=200&%s'
+            '/%s/recenttracks.xml?limit=200&%s'
 
-# title setup
-title = 'LastFetch v.0.1.1'
-print '\n\n', title
-print '=' * len(title)
+# title setup and print
+title = 'LastFetch v.0.1.2'
+print '\n\n', title, '\n', '=' * len(title)
 
 # user input
 try:
     fetch_year = raw_input('YEAR TO FETCH: ')
     play_count = input('MINIMUM PLAY COUNT: ')
-    print '\nplease wait a little for each month...''\n\n'
+    print '\n\nLOADING January . . .\n'
 except:
     pass
 
-
-# set class
+# fetch the xml data
 class LastFetch(object):
 
-    def __init__(main, user, start=None, end=None):
+    def __init__(main, user, start = None, end = None):
         main.user = user
         main.start = start
         main.end = end
@@ -65,7 +66,7 @@ class LastFetch(object):
         main.results.sort()
         main.results.reverse()
 
-    def show(main, limit=None, morethan=None):
+    def show(main, limit = None, morethan = None):
         if limit:
             return main.results[:limit]
         if morethan:
@@ -74,14 +75,17 @@ class LastFetch(object):
 
     def get(main):
         data = {'page': main.page, }
+
         if main.start:
             data['from'] = main.start
         if main.end:
             data['to'] = main.end
+
         qs = urllib.urlencode(data)
         url = scrobbler % (main.user, qs)
         h = httplib2.Http()
         resp, content = h.request(url)
+
         return content
 
     def _process(main, xml):
@@ -89,10 +93,10 @@ class LastFetch(object):
 
         def processtrack(track):
             return (
-                track.find('artist').text,
-                track.find('album').text,
-                track.find('name').text,
-                )
+                    track.find('artist').text,
+                    track.find('album').text,
+                    track.find('name').text,
+                   )
 
         return [processtrack(tr) for tr in t.findall('track')]
 
@@ -101,8 +105,11 @@ class LastFetch(object):
         return int(t.get('totalPages', 1))
 
 if __name__ == '__main__':
-
     try:
+        format = '%Y-%m-%d'
+        user = sys.argv[1]
+        currentMonth = 0;
+
         singlemonth = [
             ('January', fetch_year + '-01-01', fetch_year + '-01-31',),
             ('February', fetch_year + '-02-01', fetch_year + '-02-28',),
@@ -118,37 +125,46 @@ if __name__ == '__main__':
             ('December', fetch_year + '-12-01', fetch_year + '-12-31',),
             ('Annual Total', fetch_year + '-01-01', fetch_year + '-12-31',),
             ]
-        format = '%Y-%m-%d'
-        user = sys.argv[1]
 
         for month in singlemonth:
             print month[0]
             print '=' * len(month[0])
+
             start = int(time.mktime(time.strptime(month[1], format)))
             end = int(time.mktime(time.strptime(month[2], format)))
-            m = LastFetch(user, start, end)
-            cl = play_count
-            data = m.show(morethan=cl)  # somehow funny
 
-            totartists = len(data)
+            m = LastFetch(user, start, end)
+
+            cl = play_count
+            data = m.show(morethan = cl)
+
+            totartis = len(data)
             totplays = 0
 
             for row in data:
                 totplays += row[0]
 
-            print 'Total artist count =', totartists
+            print 'Total artist count =', totartis
             print 'Total track count =', totplays, '\n'
 
             for row in data:
                 print row[0], '=', row[1].encode('utf-8')
 
-            raw_input('\npress enter to continue...''\n\n')
-    except:
-        print '\nSorry! I am breaking down over here!''\n\n'
+            raw_input('\nPRESS ENTER TO CONTINUE . . .')
+
+            if currentMonth < 12:
+                currentMonth = currentMonth + 1
+                print '\n\nLOADING', singlemonth[currentMonth][0], '. . .\n'
+    except Exception, e:
+        if debug == False:
+            print '\nSorry! I\'am breaking down over here!\n\n'
+            sys.exit()
+        else:
+            print '\n', e
 
     try:
-        print 'Annual average track count per artist =', totplays / totartists
+        print '\n\nAnnual average track count per artist =', totplays / totartis
     except:
         print '0'
 
-raw_input('\npress enter to exit...''\n\n')
+raw_input('\n\nPRESS ENTER TO EXIT . . .\n\n')
