@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-## LastFetch v.0.1.3
+## LastFetch v.0.1.4
 
 ##  Fetch monthly and annual total stats of a specific user from last.fm
 ##  Copyright (C) 2011-2014 Sugardrunk <http://koti.tamk.fi/~c1jkahko/>
@@ -25,13 +25,16 @@ debug = False
 # main error message
 error = '\nSorry! Does not compute! Try again :D\n\n'
 
+# annual average
+annual = 0
+
+# title setup and print
+title = 'LastFetch v.0.1.4'
+print '\n\n', title, '\n', '=' * len(title)
+
 # url setup
 scrobbler = 'http://ws.audioscrobbler.com/2.0/user' + \
             '/%s/recenttracks.xml?limit=200&%s'
-
-# title setup and print
-title = 'LastFetch v.0.1.3'
-print '\n\n', title, '\n', '=' * len(title)
 
 # user input
 try:
@@ -40,7 +43,6 @@ try:
     print '\n\nLOADING January . . .\n'
 except:
     error = '\nPLEASE! GIVE CORRECT INPUT (NUMERALS ONLY)!'
-    print error
 
 # fetch the xml data
 class LastFetch(object):
@@ -112,14 +114,37 @@ class LastFetch(object):
         t = ElementTree.fromstring(xml)
         return int(t.get('totalPages', 1))
 
-# print the month
-def mon(month):
-    print month
-    print '=' * len(month)
-
 # run the main
 if __name__ == '__main__':
     try:
+        # print the month
+        def mon(month, firstday, lastday):
+            start = int(time.mktime(time.strptime(firstday, format)))
+            end = int(time.mktime(time.strptime(lastday, format)))
+
+            print month
+            print '=' * len(month)
+
+            m = LastFetch(user, start, end)
+            data = m.show(morethan = play_count)
+
+            totalartists = len(data)
+            totalplays = 0
+
+            for row in data:
+                totalplays += row[0]
+
+            print 'Total artist count =', totalartists
+            print 'Total track count =', totalplays, '\n'
+
+            global annual
+
+            if totalplays or totalartists != 0:
+                annual = totalplays / totalartists
+
+            for row in data:
+                print row[0], '=', row[1].encode('utf-8')
+
         format = '%Y-%m-%d'
         user = sys.argv[1]
 
@@ -134,26 +159,7 @@ if __name__ == '__main__':
             else:
                 nextmonth = 'Annual Total'
 
-            start = int(time.mktime(time.strptime(firstday, format)))
-            end = int(time.mktime(time.strptime(lastday, format)))
-
-            mon(month)
-            m = LastFetch(user, start, end)
-
-            cl = play_count
-            data = m.show(morethan = cl)
-
-            totalartists = len(data)
-            totalplays = 0
-
-            for row in data:
-                totalplays += row[0]
-
-            print 'Total artist count =', totalartists
-            print 'Total track count =', totalplays, '\n'
-
-            for row in data:
-                print row[0], '=', row[1].encode('utf-8')
+            mon(month, firstday, lastday)
 
             raw_input('\nPRESS ENTER TO CONTINUE . . .')
 
@@ -161,26 +167,8 @@ if __name__ == '__main__':
 
         ann = ['Annual Total', fetch_year + '-01-01', fetch_year + '-12-31']
 
-        start = int(time.mktime(time.strptime(ann[1], format)))
-        end = int(time.mktime(time.strptime(ann[2], format)))
-
-        mon(ann[0])
-        m = LastFetch(user, start, end)
-
-        cl = play_count
-        data = m.show(morethan = cl)
-
-        totalartists = len(data)
-        totalplays = 0
-
-        for row in data:
-            totalplays += row[0]
-
-        print 'Total artist count =', totalartists
-        print 'Total track count =', totalplays, '\n'
-
-        for row in data:
-            print row[0], '=', row[1].encode('utf-8')
+        mon(ann[0], ann[1], ann[2])
+        
     except Exception, e:
         if debug == False:
             print error
@@ -188,8 +176,7 @@ if __name__ == '__main__':
         else:
             print '\n', e
 
-    try:
-        annual = totalplays / totalartists
+    try:        
         print '\n\nAnnual average track count per artist =', annual
     except:
         print 'Nothing to show!'
