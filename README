@@ -1,8 +1,6 @@
-
 LastFetch v.0.1.3
 
 Fetch monthly and annual total stats of a specific user from last.fm
-
 
     Copyright (C) 2011-2014 sugardrunk <http://koti.tamk.fi/~c1jkahko/>
     Forked from 'lastyear'
@@ -10,9 +8,7 @@ Fetch monthly and annual total stats of a specific user from last.fm
 
 
 HOW TO RUN:
-
     ./python lastfetch.py <username>
 
 DEPENDENCIES:
-
     httplib2
